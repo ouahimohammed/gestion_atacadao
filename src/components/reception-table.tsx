@@ -20,8 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { storage, Reception } from '@/lib/supabase';
-import { cn } from '@/lib/utils';
+import { storage, Reception } from '@/lib/storage'; // Changé ici
 import { useTheme } from '@/components/theme-provider';
 import { useTranslation } from '@/lib/i18n';
 
@@ -32,6 +31,8 @@ import autoTable from 'jspdf-autotable';
 type ReceptionTableProps = {
   refreshTrigger: number;
 };
+
+type BadgeVariant = 'default' | 'destructive' | 'outline' | 'secondary';
 
 export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
   const [receptions, setReceptions] = useState<Reception[]>([]);
@@ -56,13 +57,18 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
 
   const fetchReceptions = () => {
     setIsLoading(true);
-    const data = storage.getReceptions();
-    const sorted = [...data].sort((a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-    setReceptions(sorted);
-    setFilteredReceptions(sorted);
-    setIsLoading(false);
+    try {
+      const data = storage.getReceptions();
+      const sorted = [...data].sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setReceptions(sorted);
+      setFilteredReceptions(sorted);
+    } catch (error) {
+      console.error('Error fetching receptions:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -112,17 +118,14 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
     }
   };
 
-  const getStatusVariant = (status: string) => {
+  const getStatusVariant = (status: string): BadgeVariant => {
     const okStatus = translate('status.ok');
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
-    switch (status) {
-      case okStatus: return 'success';
-      case passedStatus: return 'warning';
-      case expiredStatus: return 'destructive';
-      default: return 'default';
-    }
+    if (status === expiredStatus) return 'destructive';
+    if (status === passedStatus) return 'outline';
+    return 'default';
   };
 
   const getStatusIcon = (status: string) => {
@@ -248,6 +251,8 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
     { value: translate('status.expired'), label: translate('status.expired') },
   ];
 
+  const statusLabel = statusOptions.find(opt => opt.value === statusFilter)?.label || translate('common.allStatus');
+
   return (
     <Card className="shadow-2xl border-0 mt-8">
       <CardHeader className="pb-4">
@@ -289,9 +294,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                   <DropdownMenuItem
                     key={option.value}
                     onClick={() => setStatusFilter(option.value)}
-                    className={cn(
-                      statusFilter === option.value && 'bg-blue-50 text-blue-700'
-                    )}
+                    className={statusFilter === option.value ? 'bg-blue-50 text-blue-700' : ''}
                   >
                     {option.label}
                   </DropdownMenuItem>
@@ -341,7 +344,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                 variant="secondary" 
                 className="flex items-center gap-2 px-4 py-2 text-base"
               >
-                {translate('common.filter')}: {statusOptions.find(opt => opt.value === statusFilter)?.label}
+                {translate('common.filter')}: {statusLabel}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -464,11 +467,9 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                       </div>
                     </TableCell>
                     <TableCell className="py-4">
-                      <div className={cn(
-                        'font-medium flex items-center gap-1',
-                        reception.status === translate('status.expired') && 'text-red-600 dark:text-red-400',
-                        reception.status === translate('status.passedThird') && 'text-orange-600 dark:text-orange-400'
-                      )}>
+                      <div className={reception.status === translate('status.expired') ? 'text-red-600 dark:text-red-400 font-medium flex items-center gap-1' : 
+                                   reception.status === translate('status.passedThird') ? 'text-orange-600 dark:text-orange-400 font-medium flex items-center gap-1' : 
+                                   'font-medium flex items-center gap-1'}>
                         <Calendar className="h-4 w-4" />
                         {format(new Date(reception.expiration_date), 'dd/MM/yyyy')}
                       </div>

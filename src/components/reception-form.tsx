@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { storage } from '@/lib/supabase';
+import { storage } from '@/lib/storage'; // Changé ici
 import { useTheme } from '@/components/theme-provider';
 import { useTranslation } from '@/lib/i18n';
 
@@ -22,7 +22,6 @@ type ReceptionFormProps = {
   onReceptionAdded: () => void;
 };
 
-// Types pour les variants de badge corrigés
 type BadgeVariant = 'default' | 'destructive' | 'outline' | 'secondary';
 
 export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
@@ -75,15 +74,12 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
-    switch (status) {
-      case okStatus: return 'default';
-      case passedStatus: return 'outline';
-      case expiredStatus: return 'destructive';
-      default: return 'secondary';
-    }
+    if (status === expiredStatus) return 'destructive';
+    if (status === passedStatus) return 'outline';
+    return 'default';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!productionDate || !expirationDate) {
@@ -93,42 +89,38 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
 
     setIsSubmitting(true);
 
-    const receptionData = {
-      id: Math.random().toString(36).substring(2, 11),
-      product_name: productName,
-      pallet_number: palletNumber || null,
-      cartons: parseInt(cartons),
-      units_per_carton: parseInt(unitsPerCarton),
-      total_units: totalUnits,
-      barcode,
-      production_date: format(productionDate, 'yyyy-MM-dd'),
-      expiration_date: format(expirationDate, 'yyyy-MM-dd'),
-      shelf_life_months: shelfLifeMonths,
-      status: calculateStatus(),
-      created_at: new Date().toISOString(),
-    };
-
     try {
+      const receptionData = {
+        product_name: productName,
+        pallet_number: palletNumber || null,
+        cartons: parseInt(cartons),
+        units_per_carton: parseInt(unitsPerCarton),
+        total_units: totalUnits,
+        barcode,
+        production_date: format(productionDate, 'yyyy-MM-dd'),
+        expiration_date: format(expirationDate, 'yyyy-MM-dd'),
+        shelf_life_months: shelfLifeMonths,
+        status: calculateStatus(),
+        created_at: new Date().toISOString(),
+      };
+
       storage.addReception(receptionData);
+      
+      // Réinitialiser le formulaire
+      setProductName('');
+      setPalletNumber('');
+      setCartons('');
+      setUnitsPerCarton('');
+      setBarcode('');
+      setProductionDate(undefined);
+      setExpirationDate(undefined);
+      
+      onReceptionAdded();
     } catch (error) {
-      alert('Error adding reception');
+      alert(translate('form.addingError') || 'Erreur lors de l\'ajout');
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    setIsSubmitting(false);
-    resetForm();
-    onReceptionAdded();
-  };
-
-  const resetForm = () => {
-    setProductName('');
-    setPalletNumber('');
-    setCartons('');
-    setUnitsPerCarton('');
-    setBarcode('');
-    setProductionDate(undefined);
-    setExpirationDate(undefined);
   };
 
   const formatDateForInput = (date: Date | undefined): string => {

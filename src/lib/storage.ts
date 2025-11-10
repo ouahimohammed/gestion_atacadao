@@ -1,8 +1,8 @@
-// lib/supabase.ts
+// lib/storage.ts
 export interface Reception {
   id: string;
   product_name: string;
-  pallet_number: string | null; // Correction: accepter null
+  pallet_number: string | null;
   cartons: number;
   units_per_carton: number;
   total_units: number;
@@ -14,24 +14,33 @@ export interface Reception {
   created_at: string;
 }
 
+// Simuler une base de données avec localStorage
 export const storage = {
   getReceptions: (): Reception[] => {
     try {
       const stored = localStorage.getItem('warehouse-receptions');
-      return stored ? JSON.parse(stored) : [];
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      return [];
     } catch (error) {
       console.error('Error reading receptions:', error);
       return [];
     }
   },
 
-  addReception: (reception: Reception): void => {
+  addReception: (receptionData: Omit<Reception, 'id'>): void => {
     try {
       const receptions = storage.getReceptions();
-      receptions.push(reception);
+      const newReception: Reception = {
+        ...receptionData,
+        id: Math.random().toString(36).substring(2, 11),
+      };
+      receptions.push(newReception);
       localStorage.setItem('warehouse-receptions', JSON.stringify(receptions));
     } catch (error) {
       console.error('Error adding reception:', error);
+      throw new Error('Failed to add reception');
     }
   },
 
@@ -42,6 +51,7 @@ export const storage = {
       localStorage.setItem('warehouse-receptions', JSON.stringify(filtered));
     } catch (error) {
       console.error('Error deleting reception:', error);
+      throw new Error('Failed to delete reception');
     }
   },
 
@@ -54,6 +64,7 @@ export const storage = {
       localStorage.setItem('warehouse-receptions', JSON.stringify(updated));
     } catch (error) {
       console.error('Error updating reception:', error);
+      throw new Error('Failed to update reception');
     }
   }
 };
