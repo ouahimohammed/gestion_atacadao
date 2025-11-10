@@ -1,7 +1,8 @@
-export type Reception = {
+// lib/supabase.ts
+export interface Reception {
   id: string;
   product_name: string;
-  pallet_number: string;
+  pallet_number: string | null; // Correction: accepter null
   cartons: number;
   units_per_carton: number;
   total_units: number;
@@ -11,25 +12,48 @@ export type Reception = {
   shelf_life_months: number;
   status: string;
   created_at: string;
-};
-
-const STORAGE_KEY = 'warehouse_receptions';
+}
 
 export const storage = {
   getReceptions: (): Reception[] => {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    try {
+      const stored = localStorage.getItem('warehouse-receptions');
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error reading receptions:', error);
+      return [];
+    }
   },
 
   addReception: (reception: Reception): void => {
-    const receptions = storage.getReceptions();
-    receptions.push(reception);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(receptions));
+    try {
+      const receptions = storage.getReceptions();
+      receptions.push(reception);
+      localStorage.setItem('warehouse-receptions', JSON.stringify(receptions));
+    } catch (error) {
+      console.error('Error adding reception:', error);
+    }
   },
 
   deleteReception: (id: string): void => {
-    const receptions = storage.getReceptions();
-    const filtered = receptions.filter((r) => r.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    try {
+      const receptions = storage.getReceptions();
+      const filtered = receptions.filter(reception => reception.id !== id);
+      localStorage.setItem('warehouse-receptions', JSON.stringify(filtered));
+    } catch (error) {
+      console.error('Error deleting reception:', error);
+    }
   },
+
+  updateReception: (id: string, updates: Partial<Reception>): void => {
+    try {
+      const receptions = storage.getReceptions();
+      const updated = receptions.map(reception =>
+        reception.id === id ? { ...reception, ...updates } : reception
+      );
+      localStorage.setItem('warehouse-receptions', JSON.stringify(updated));
+    } catch (error) {
+      console.error('Error updating reception:', error);
+    }
+  }
 };

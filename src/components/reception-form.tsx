@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { differenceInMonths } from 'date-fns';
 import { Calendar as CalendarIcon, Plus, Calculator, Package, Barcode, Palette } from 'lucide-react';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +21,9 @@ import { useTranslation } from '@/lib/i18n';
 type ReceptionFormProps = {
   onReceptionAdded: () => void;
 };
+
+// Types pour les variants de badge corrigés
+type BadgeVariant = 'default' | 'destructive' | 'outline' | 'secondary';
 
 export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
   const [productName, setProductName] = useState('');
@@ -68,16 +70,16 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
     return translate('status.ok');
   };
 
-  const getStatusVariant = (status: string) => {
+  const getStatusVariant = (status: string): BadgeVariant => {
     const okStatus = translate('status.ok');
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
     switch (status) {
-      case okStatus: return 'success';
-      case passedStatus: return 'warning';
+      case okStatus: return 'default';
+      case passedStatus: return 'outline';
       case expiredStatus: return 'destructive';
-      default: return 'default';
+      default: return 'secondary';
     }
   };
 
@@ -142,6 +144,8 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
       setExpirationDate(date);
     }
   };
+
+  const isFormReady = productName && cartons && unitsPerCarton && barcode && productionDate && expirationDate;
 
   return (
     <Card className="shadow-2xl border-0 bg-gradient-to-br from-white via-blue-50/50 to-indigo-50/30 dark:from-slate-900 dark:via-blue-950/10 dark:to-indigo-950/10">
@@ -364,7 +368,7 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
               <Button 
                 type="submit" 
                 className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all duration-200 text-base font-semibold"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isFormReady}
               >
                 {isSubmitting ? (
                   <div className="flex items-center gap-3">
@@ -387,8 +391,8 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
               <span className="text-blue-700 dark:text-blue-300 text-center sm:text-left">
                 Tous les champs sont requis pour ajouter une réception
               </span>
-              <Badge variant={productName && cartons && unitsPerCarton && barcode && productionDate && expirationDate ? "success" : "secondary"}>
-                {productName && cartons && unitsPerCarton && barcode && productionDate && expirationDate ? "Prêt" : "En attente"}
+              <Badge variant={isFormReady ? "default" : "secondary"}>
+                {isFormReady ? "Prêt" : "En attente"}
               </Badge>
             </div>
           </div>
@@ -396,4 +400,4 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
       </CardContent>
     </Card>
   );
-} 
+}
