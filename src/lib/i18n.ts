@@ -1,4 +1,3 @@
-// lib/i18n.ts
 export const translations = {
   fr: {
     app: {
@@ -244,7 +243,7 @@ export const translations = {
 
 // Hook de traduction sécurisé
 export const useTranslation = () => {
-  const t = (language: string, key: string): string => {
+  const t = (language, key) => {
     // Vérifications de sécurité
     if (!language || !key) {
       console.warn('Language or key is missing', { language, key });
@@ -252,7 +251,7 @@ export const useTranslation = () => {
     }
 
     // Vérifier si la langue existe
-    const langTranslations = translations[language as keyof typeof translations];
+    const langTranslations = translations[language];
     if (!langTranslations) {
       console.warn(`Language '${language}' not found in translations`);
       return key;
@@ -260,7 +259,7 @@ export const useTranslation = () => {
 
     // Parcourir les clés
     const keys = key.split('.');
-    let value: any = langTranslations;
+    let value = langTranslations;
     
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
@@ -279,11 +278,15 @@ export const useTranslation = () => {
 };
 
 // Hook combiné pour une utilisation plus simple
-import { useTheme } from '@/components/theme-provider';
-
 export const useAppTranslation = () => {
-  const { language } = useTheme();
+  // Note: Vous devrez adapter cette partie selon votre implémentation de useTheme
+  // Pour l'instant, on utilise une valeur par défaut
+  const getLanguage = () => {
+    // Vous pouvez remplacer cette logique par votre propre gestion de thème
+    return localStorage.getItem('language') || 'fr';
+  };
+  
   const t = useTranslation();
   
-  return (key: string) => t(language, key);
+  return (key) => t(getLanguage(), key);
 };
