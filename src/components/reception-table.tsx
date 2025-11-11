@@ -1,4 +1,3 @@
-// components/reception-table.jsx
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { Search, Trash2, Download, Filter, ArrowUpDown, ChevronUp, ChevronDown, Package, Palette, Box, Calculator, Barcode, Calendar, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
@@ -25,10 +24,15 @@ export function ReceptionTable({ refreshTrigger }) {
   
   const translate = (key) => {
     try {
+      // Vérifier que la clé est définie et non vide
+      if (!key || key === undefined) {
+        console.warn('Translation key is undefined or empty');
+        return 'Missing key';
+      }
       return t(language, key) || key;
     } catch (error) {
       console.warn('Translation error for key:', key, error);
-      return key;
+      return key || 'Translation error';
     }
   };
 
@@ -102,6 +106,9 @@ export function ReceptionTable({ refreshTrigger }) {
   };
 
   const getStatusColor = (status) => {
+    // Utiliser les valeurs directes au lieu des traductions pour la comparaison
+    if (!status) return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+    
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
@@ -111,6 +118,8 @@ export function ReceptionTable({ refreshTrigger }) {
   };
 
   const getStatusIcon = (status) => {
+    if (!status) return <CheckCircle className="h-4 w-4" />;
+    
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
@@ -122,7 +131,7 @@ export function ReceptionTable({ refreshTrigger }) {
   };
 
   const calculateTotalUnits = () => {
-    return filteredReceptions.reduce((total, reception) => total + reception.total_units, 0);
+    return filteredReceptions.reduce((total, reception) => total + (reception.total_units || 0), 0);
   };
 
   const getSortIcon = (field) => {
@@ -167,9 +176,9 @@ export function ReceptionTable({ refreshTrigger }) {
       const data = filteredReceptions.map(reception => [
         reception.product_name || '',
         reception.pallet_number || '',
-        reception.cartons?.toString() || '0',
-        reception.units_per_carton?.toString() || '0',
-        reception.total_units?.toLocaleString() || '0',
+        (reception.cartons || 0).toString(),
+        (reception.units_per_carton || 0).toString(),
+        (reception.total_units || 0).toLocaleString(),
         reception.barcode || '',
         reception.production_date ? format(new Date(reception.production_date), 'dd/MM/yyyy') : '',
         reception.expiration_date ? format(new Date(reception.expiration_date), 'dd/MM/yyyy') : '',
@@ -430,25 +439,25 @@ export function ReceptionTable({ refreshTrigger }) {
                     <td className="px-4 py-4">
                       <div className="text-center font-semibold flex items-center justify-center gap-1 text-gray-900 dark:text-white">
                         <Box className="h-4 w-4 text-gray-400" />
-                        {reception.cartons}
+                        {reception.cartons || 0}
                       </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-center flex items-center justify-center gap-1 text-gray-900 dark:text-white">
                         <Calculator className="h-4 w-4 text-gray-400" />
-                        {reception.units_per_carton}
+                        {reception.units_per_carton || 0}
                       </div>
                     </td>
                     <td className="px-4 py-4 font-semibold text-blue-600 dark:text-blue-400">
                       <div className="text-center flex items-center justify-center gap-1">
                         <Calculator className="h-4 w-4" />
-                        {reception.total_units.toLocaleString()}
+                        {(reception.total_units || 0).toLocaleString()}
                       </div>
                     </td>
                     <td className="px-4 py-4">
                       <code className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 dark:bg-slate-800 rounded text-gray-900 dark:text-gray-100 font-mono">
                         <Barcode className="h-3 w-3" />
-                        {reception.barcode}
+                        {reception.barcode || ''}
                       </code>
                     </td>
                     <td className="px-4 py-4 text-gray-900 dark:text-white">
@@ -470,13 +479,13 @@ export function ReceptionTable({ refreshTrigger }) {
                     <td className="px-4 py-4">
                       <div className="text-center flex items-center justify-center gap-1 text-gray-900 dark:text-white">
                         <Calendar className="h-4 w-4 text-gray-400" />
-                        {reception.shelf_life_months} mois
+                        {reception.shelf_life_months || 0} mois
                       </div>
                     </td>
                     <td className="px-4 py-4">
                       <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(reception.status)}`}>
                         {getStatusIcon(reception.status)}
-                        {reception.status}
+                        {reception.status || translate('status.ok')}
                       </span>
                     </td>
                     <td className="px-4 py-4">
