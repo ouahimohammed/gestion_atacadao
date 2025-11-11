@@ -80,6 +80,10 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
       const aValue = a[field];
       const bValue = b[field];
 
+      // Gestion des valeurs null/undefined
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return direction === 'asc' ? -1 : 1;
+      if (bValue == null) return direction === 'asc' ? 1 : -1;
       if (aValue < bValue) return direction === 'asc' ? -1 : 1;
       if (aValue > bValue) return direction === 'asc' ? 1 : -1;
       return 0;
@@ -100,7 +104,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
   };
 
   const getStatusColor = (status: string) => {
-    const okStatus = translate('status.ok');
+    // Supprimé les variables inutilisées
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
@@ -110,15 +114,13 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
   };
 
   const getStatusIcon = (status: string) => {
-    const okStatus = translate('status.ok');
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
     switch (status) {
-      case okStatus: return <CheckCircle className="h-4 w-4" />;
-      case passedStatus: return <AlertTriangle className="h-4 w-4" />;
       case expiredStatus: return <XCircle className="h-4 w-4" />;
-      default: return <Package className="h-4 w-4" />;
+      case passedStatus: return <AlertTriangle className="h-4 w-4" />;
+      default: return <CheckCircle className="h-4 w-4" />;
     }
   };
 
@@ -511,4 +513,4 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
       </div>
     </div>
   );
-}
+} 

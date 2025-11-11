@@ -59,7 +59,7 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
   };
 
   const getStatusColor = (status: string) => {
-    const okStatus = translate('status.ok');
+    // Supprimé les variables inutilisées
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
