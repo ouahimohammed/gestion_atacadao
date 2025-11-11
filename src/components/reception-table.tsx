@@ -2,25 +2,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { Search, Trash2, Download, Filter, ArrowUpDown, ChevronUp, ChevronDown, Package, Palette, Box, Calculator, Barcode, Calendar, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { storage, Reception } from '@/lib/storage'; // Changé ici
+import { storage, Reception } from '@/lib/storage';
 import { useTheme } from '@/components/theme-provider';
 import { useTranslation } from '@/lib/i18n';
 
@@ -32,8 +14,6 @@ type ReceptionTableProps = {
   refreshTrigger: number;
 };
 
-type BadgeVariant = 'default' | 'destructive' | 'outline' | 'secondary';
-
 export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
   const [receptions, setReceptions] = useState<Reception[]>([]);
   const [filteredReceptions, setFilteredReceptions] = useState<Reception[]>([]);
@@ -42,6 +22,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showStatusFilter, setShowStatusFilter] = useState(false);
   
   const { language } = useTheme();
   const t = useTranslation();
@@ -118,14 +99,14 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
     }
   };
 
-  const getStatusVariant = (status: string): BadgeVariant => {
+  const getStatusColor = (status: string) => {
     const okStatus = translate('status.ok');
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
-    if (status === expiredStatus) return 'destructive';
-    if (status === passedStatus) return 'outline';
-    return 'default';
+    if (status === expiredStatus) return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+    if (status === passedStatus) return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
+    return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
   };
 
   const getStatusIcon = (status: string) => {
@@ -254,69 +235,83 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
   const statusLabel = statusOptions.find(opt => opt.value === statusFilter)?.label || translate('common.allStatus');
 
   return (
-    <Card className="shadow-2xl border-0 mt-8">
-      <CardHeader className="pb-4">
+    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border-0 mt-8">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200 dark:border-slate-700">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <CardTitle className="flex items-center gap-3 text-2xl font-bold">
+          <div className="flex items-center gap-3">
             <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg">
               <Package className="h-6 w-6 text-white" />
             </div>
             <div>
-              {translate('table.title')}
-              <p className="text-sm font-normal text-muted-foreground mt-1">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {translate('table.title')}
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Liste des réceptions enregistrées
               </p>
             </div>
-          </CardTitle>
+          </div>
           
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Barre de recherche */}
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
                 placeholder={translate('table.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 h-11 focus:ring-2 focus:ring-blue-500 transition-all duration-200 border-2"
+                className="pl-10 pr-4 h-11 w-full sm:w-64 border-2 border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-white transition-all duration-200"
               />
             </div>
 
             {/* Filtre par statut */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2 h-11">
-                  <Filter className="h-4 w-4" />
-                  <span>{translate('common.status')}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {statusOptions.map(option => (
-                  <DropdownMenuItem
-                    key={option.value}
-                    onClick={() => setStatusFilter(option.value)}
-                    className={statusFilter === option.value ? 'bg-blue-50 text-blue-700' : ''}
-                  >
-                    {option.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="relative">
+              <button
+                onClick={() => setShowStatusFilter(!showStatusFilter)}
+                className="inline-flex items-center gap-2 h-11 px-4 border-2 border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <Filter className="h-4 w-4" />
+                <span>{translate('common.status')}</span>
+              </button>
+              
+              {showStatusFilter && (
+                <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg shadow-lg z-10">
+                  {statusOptions.map(option => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setStatusFilter(option.value);
+                        setShowStatusFilter(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 first:rounded-t-lg last:rounded-b-lg ${
+                        statusFilter === option.value 
+                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' 
+                          : 'text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Bouton PDF */}
-            <Button 
+            <button
               onClick={generatePDF}
               disabled={filteredReceptions.length === 0}
-              className="flex items-center gap-2 h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all duration-200"
+              className="inline-flex items-center gap-2 h-11 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <Download className="h-4 w-4" />
               {translate('table.downloadPDF')}
-            </Button>
+            </button>
           </div>
         </div>
         
         {/* Statistiques en temps réel */}
         {filteredReceptions.length > 0 && (
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-xl border-2">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-xl border-2 border-blue-200 dark:border-blue-800">
             <div className="flex items-center gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 flex items-center gap-2">
@@ -340,55 +335,50 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
             </div>
             
             {statusFilter !== 'all' && (
-              <Badge 
-                variant="secondary" 
-                className="flex items-center gap-2 px-4 py-2 text-base"
-              >
+              <span className="inline-flex items-center gap-2 px-4 py-2 text-base bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full">
                 {translate('common.filter')}: {statusLabel}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 hover:bg-transparent"
+                <button
                   onClick={() => setStatusFilter('all')}
+                  className="h-5 w-5 p-0 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
                 >
                   ×
-                </Button>
-              </Badge>
+                </button>
+              </span>
             )}
           </div>
         )}
-      </CardHeader>
+      </div>
       
-      <CardContent>
+      {/* Table Content */}
+      <div className="p-6">
         {isLoading ? (
           <div className="text-center py-16">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <div className="text-muted-foreground text-lg">{translate('table.loading')}</div>
+            <div className="text-gray-500 dark:text-gray-400 text-lg">{translate('table.loading')}</div>
           </div>
         ) : filteredReceptions.length === 0 ? (
           <div className="text-center py-16">
-            <div className="text-muted-foreground text-lg mb-4">
+            <div className="text-gray-500 dark:text-gray-400 text-lg mb-4">
               {searchTerm || statusFilter !== 'all' ? translate('table.noResults') : translate('table.noData')}
             </div>
             {(searchTerm || statusFilter !== 'all') && (
-              <Button 
-                variant="outline" 
+              <button
                 onClick={() => {
                   setSearchTerm('');
                   setStatusFilter('all');
                 }}
-                className="flex items-center gap-2"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <Filter className="h-4 w-4" />
                 {translate('common.resetFilters')}
-              </Button>
+              </button>
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border-2">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
+          <div className="overflow-x-auto rounded-lg border-2 border-gray-200 dark:border-slate-700">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-slate-800/50">
                   {[
                     { key: 'product_name', icon: <Package className="h-4 w-4" /> },
                     { key: 'pallet_number', icon: <Palette className="h-4 w-4" /> },
@@ -401,9 +391,9 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                     { key: 'shelf_life_months', icon: <Calendar className="h-4 w-4" /> },
                     { key: 'status', icon: <AlertTriangle className="h-4 w-4" /> }
                   ].map(({ key, icon }) => (
-                    <TableHead
+                    <th
                       key={key}
-                      className="cursor-pointer hover:bg-muted transition-colors duration-150 font-semibold py-4"
+                      className="cursor-pointer px-4 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors duration-150"
                       onClick={() => handleSort(key as keyof Reception)}
                     >
                       <div className="flex items-center gap-2">
@@ -411,112 +401,114 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                         {translate(`table.columns.${key}`)}
                         {getSortIcon(key as keyof Reception)}
                       </div>
-                    </TableHead>
+                    </th>
                   ))}
-                  <TableHead className="font-semibold py-4">{translate('table.columns.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+                  <th className="px-4 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                    {translate('table.columns.actions')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
                 {filteredReceptions.map((reception) => (
-                  <TableRow 
+                  <tr 
                     key={reception.id} 
-                    className="group hover:bg-muted/30 transition-colors duration-150"
+                    className="hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors duration-150"
                   >
-                    <TableCell className="font-medium py-4">
+                    <td className="px-4 py-4 font-medium text-gray-900 dark:text-white">
                       <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <Package className="h-4 w-4 text-gray-400" />
                         <div className="max-w-[200px] truncate" title={reception.product_name}>
                           {reception.product_name}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <Badge variant="outline" className="font-mono flex items-center gap-1 w-fit">
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-mono border border-gray-300 dark:border-slate-600 rounded-full bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300">
                         <Palette className="h-3 w-3" />
                         {reception.pallet_number || '-'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="text-center font-semibold flex items-center justify-center gap-1">
-                        <Box className="h-4 w-4 text-muted-foreground" />
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-center font-semibold flex items-center justify-center gap-1 text-gray-900 dark:text-white">
+                        <Box className="h-4 w-4 text-gray-400" />
                         {reception.cartons}
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="text-center flex items-center justify-center gap-1">
-                        <Calculator className="h-4 w-4 text-muted-foreground" />
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-center flex items-center justify-center gap-1 text-gray-900 dark:text-white">
+                        <Calculator className="h-4 w-4 text-gray-400" />
                         {reception.units_per_carton}
                       </div>
-                    </TableCell>
-                    <TableCell className="font-semibold text-blue-600 py-4">
+                    </td>
+                    <td className="px-4 py-4 font-semibold text-blue-600 dark:text-blue-400">
                       <div className="text-center flex items-center justify-center gap-1">
                         <Calculator className="h-4 w-4" />
                         {reception.total_units.toLocaleString()}
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <code className="bg-muted px-2 py-1 rounded text-sm flex items-center gap-1 w-fit">
+                    </td>
+                    <td className="px-4 py-4">
+                      <code className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 dark:bg-slate-800 rounded text-gray-900 dark:text-gray-100 font-mono">
                         <Barcode className="h-3 w-3" />
                         {reception.barcode}
                       </code>
-                    </TableCell>
-                    <TableCell className="py-4">
+                    </td>
+                    <td className="px-4 py-4 text-gray-900 dark:text-white">
                       <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <Calendar className="h-4 w-4 text-gray-400" />
                         {format(new Date(reception.production_date), 'dd/MM/yyyy')}
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className={reception.status === translate('status.expired') ? 'text-red-600 dark:text-red-400 font-medium flex items-center gap-1' : 
-                                   reception.status === translate('status.passedThird') ? 'text-orange-600 dark:text-orange-400 font-medium flex items-center gap-1' : 
-                                   'font-medium flex items-center gap-1'}>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className={`flex items-center gap-1 font-medium ${
+                        reception.status === translate('status.expired') ? 'text-red-600 dark:text-red-400' :
+                        reception.status === translate('status.passedThird') ? 'text-orange-600 dark:text-orange-400' :
+                        'text-gray-900 dark:text-white'
+                      }`}>
                         <Calendar className="h-4 w-4" />
                         {format(new Date(reception.expiration_date), 'dd/MM/yyyy')}
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="text-center flex items-center justify-center gap-1">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-center flex items-center justify-center gap-1 text-gray-900 dark:text-white">
+                        <Calendar className="h-4 w-4 text-gray-400" />
                         {reception.shelf_life_months} mois
                       </div>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <Badge variant={getStatusVariant(reception.status)} className="flex items-center gap-1 w-fit">
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(reception.status)}`}>
                         {getStatusIcon(reception.status)}
                         {reception.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <Button
-                        variant="ghost"
-                        size="icon"
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <button
                         onClick={() => handleDelete(reception.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                      </button>
+                    </td>
+                  </tr>
                 ))}
                 
                 {/* Ligne du total */}
-                <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 font-bold border-t-2">
-                  <TableCell colSpan={4} className="text-right text-lg py-4">
+                <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 font-bold border-t-2 border-gray-300 dark:border-slate-600">
+                  <td colSpan={4} className="px-4 py-4 text-right text-lg text-gray-900 dark:text-white">
                     {translate('table.generalTotal')} :
-                  </TableCell>
-                  <TableCell className="text-blue-600 text-lg py-4">
+                  </td>
+                  <td className="px-4 py-4 text-blue-600 dark:text-blue-400 text-lg">
                     <div className="flex items-center justify-center gap-2">
                       <Calculator className="h-5 w-5" />
                       {calculateTotalUnits().toLocaleString()} {translate('table.totalUnits').toLowerCase()}
                     </div>
-                  </TableCell>
-                  <TableCell colSpan={6}></TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+                  </td>
+                  <td colSpan={6}></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
