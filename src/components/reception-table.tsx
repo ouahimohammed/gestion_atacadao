@@ -168,16 +168,17 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
       ];
 
       const data = filteredReceptions.map(reception => [
-        reception.product_name,
-        reception.pallet_number || '',
-        reception.cartons.toString(),
-        reception.units_per_carton.toString(),
-        reception.total_units.toLocaleString(),
-        reception.barcode,
-        format(new Date(reception.production_date), 'dd/MM/yyyy'),
-        format(new Date(reception.expiration_date), 'dd/MM/yyyy'),
-        reception.status
-      ]);
+  reception.product_name ?? '',
+  reception.pallet_number ?? '',
+  reception.cartons?.toString() ?? '0',
+  reception.units_per_carton?.toString() ?? '0',
+  reception.total_units?.toLocaleString() ?? '0',
+  reception.barcode ?? '',
+  reception.production_date ? format(new Date(reception.production_date), 'dd/MM/yyyy') : '',
+  reception.expiration_date ? format(new Date(reception.expiration_date), 'dd/MM/yyyy') : '',
+  reception.status ?? ''
+]);
+  
 
       // Utiliser autoTable directement
       autoTable(doc, {
@@ -457,7 +458,8 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                     <td className="px-4 py-4 text-gray-900 dark:text-white">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4 text-gray-400" />
-                        {format(new Date(reception.production_date), 'dd/MM/yyyy')}
+                         {reception.production_date ? format(new Date(reception.production_date), 'dd/MM/yyyy') : '—'}
+
                       </div>
                     </td>
                     <td className="px-4 py-4">
@@ -467,8 +469,9 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                         'text-gray-900 dark:text-white'
                       }`}>
                         <Calendar className="h-4 w-4" />
-                        {format(new Date(reception.expiration_date), 'dd/MM/yyyy')}
-                      </div>
+                        {reception.expiration_date ? format(new Date(reception.expiration_date), 'dd/MM/yyyy') : '—'}
+
+                       </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-center flex items-center justify-center gap-1 text-gray-900 dark:text-white">
