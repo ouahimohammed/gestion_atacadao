@@ -169,7 +169,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
 
       const data = filteredReceptions.map(reception => [
         reception.product_name,
-        reception.pallet_number || '-',
+        reception.pallet_number || '',
         reception.cartons.toString(),
         reception.units_per_carton.toString(),
         reception.total_units.toLocaleString(),
@@ -427,7 +427,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                     <td className="px-4 py-4">
                       <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-mono border border-gray-300 dark:border-slate-600 rounded-full bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300">
                         <Palette className="h-3 w-3" />
-                        {reception.pallet_number || '-'}
+                        {reception.pallet_number ?? ""}
                       </span>
                     </td>
                     <td className="px-4 py-4">

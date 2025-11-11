@@ -17,7 +17,7 @@ type ThemeProviderState = {
   setTheme: (theme: Theme) => void;
   language: Language;
   setLanguage: (language: Language) => void;
-  direction: 'ltr' | 'rtl';
+  direction: string ;
 };
 
 const initialState: ThemeProviderState = {
