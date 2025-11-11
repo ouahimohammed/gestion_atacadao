@@ -1,4 +1,4 @@
-// components/theme-toggle.tsx
+// components/theme-toggle.jsx
 import { useTheme } from '@/components/theme-provider';
 
 export function ThemeToggle() {
@@ -16,7 +16,7 @@ export function ThemeToggle() {
       <div className="relative">
         <select
           value={language}
-          onChange={(e) => setLanguage(e.target.value as any)}
+          onChange={(e) => setLanguage(e.target.value)}
           className="appearance-none bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-md px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
         >
           {Object.entries(languages).map(([code, { name, flag }]) => (

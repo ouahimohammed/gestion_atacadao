@@ -1,4 +1,4 @@
-// components/reception-form.tsx
+// components/reception-form.jsx
 import { useState } from 'react';
 import { differenceInMonths } from 'date-fns';
 import { Calendar as CalendarIcon, Plus, Calculator, Package, Barcode, Palette } from 'lucide-react';
@@ -7,18 +7,14 @@ import { storage } from '@/lib/storage';
 import { useTheme } from '@/components/theme-provider';
 import { useTranslation } from '@/lib/i18n';
 
-type ReceptionFormProps = {
-  onReceptionAdded: () => void;
-};
-
-export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
+export function ReceptionForm({ onReceptionAdded }) {
   const [productName, setProductName] = useState('');
   const [palletNumber, setPalletNumber] = useState('');
   const [cartons, setCartons] = useState('');
   const [unitsPerCarton, setUnitsPerCarton] = useState('');
   const [barcode, setBarcode] = useState('');
-  const [productionDate, setProductionDate] = useState<Date>();
-  const [expirationDate, setExpirationDate] = useState<Date>();
+  const [productionDate, setProductionDate] = useState();
+  const [expirationDate, setExpirationDate] = useState();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showProductionCalendar, setShowProductionCalendar] = useState(false);
   const [showExpirationCalendar, setShowExpirationCalendar] = useState(false);
@@ -26,11 +22,11 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
   const { language } = useTheme();
   const t = useTranslation();
   
-  const translate = (key: string) => {
+  const translate = (key) => {
     try {
-      return t(language, key);
+      return t(language, key) || key;
     } catch (error) {
-      console.warn(`Translation error for key: ${key}`, error);
+      console.warn('Translation error for key:', key, error);
       return key;
     }
   };
@@ -58,8 +54,7 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
     return translate('status.ok');
   };
 
-  const getStatusColor = (status: string) => {
-    // Supprimé les variables inutilisées
+  const getStatusColor = (status) => {
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
@@ -68,7 +63,7 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
     return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!productionDate || !expirationDate) {
@@ -112,12 +107,12 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
     }
   };
 
-  const formatDateForInput = (date: Date | undefined): string => {
+  const formatDateForInput = (date) => {
     if (!date) return '';
     return format(date, 'yyyy-MM-dd');
   };
 
-  const handleDateInputChange = (type: 'production' | 'expiration', value: string) => {
+  const handleDateInputChange = (type, value) => {
     const date = value ? new Date(value) : undefined;
     if (type === 'production') {
       setProductionDate(date);

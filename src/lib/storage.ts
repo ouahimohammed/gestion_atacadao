@@ -1,22 +1,6 @@
-// lib/storage.ts
-export interface Reception {
-  id: string;
-  product_name: string;
-  pallet_number: string | null;
-  cartons: number;
-  units_per_carton: number;
-  total_units: number;
-  barcode: string;
-  production_date: string;
-  expiration_date: string;
-  shelf_life_months: number;
-  status: string;
-  created_at: string;
-}
-
-// Simuler une base de données avec localStorage
+// lib/storage.js
 export const storage = {
-  getReceptions: (): Reception[] => {
+  getReceptions: () => {
     try {
       const stored = localStorage.getItem('warehouse-receptions');
       if (stored) {
@@ -29,10 +13,10 @@ export const storage = {
     }
   },
 
-  addReception: (receptionData: Omit<Reception, 'id'>): void => {
+  addReception: (receptionData) => {
     try {
       const receptions = storage.getReceptions();
-      const newReception: Reception = {
+      const newReception = {
         ...receptionData,
         id: Math.random().toString(36).substring(2, 11),
       };
@@ -44,7 +28,7 @@ export const storage = {
     }
   },
 
-  deleteReception: (id: string): void => {
+  deleteReception: (id) => {
     try {
       const receptions = storage.getReceptions();
       const filtered = receptions.filter(reception => reception.id !== id);
@@ -55,7 +39,7 @@ export const storage = {
     }
   },
 
-  updateReception: (id: string, updates: Partial<Reception>): void => {
+  updateReception: (id, updates) => {
     try {
       const receptions = storage.getReceptions();
       const updated = receptions.map(reception =>

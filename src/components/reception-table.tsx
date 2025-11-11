@@ -1,8 +1,8 @@
-// components/reception-table.tsx
+// components/reception-table.jsx
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { Search, Trash2, Download, Filter, ArrowUpDown, ChevronUp, ChevronDown, Package, Palette, Box, Calculator, Barcode, Calendar, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
-import { storage, Reception } from '@/lib/storage';
+import { storage } from '@/lib/storage';
 import { useTheme } from '@/components/theme-provider';
 import { useTranslation } from '@/lib/i18n';
 
@@ -10,28 +10,24 @@ import { useTranslation } from '@/lib/i18n';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-type ReceptionTableProps = {
-  refreshTrigger: number;
-};
-
-export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
-  const [receptions, setReceptions] = useState<Reception[]>([]);
-  const [filteredReceptions, setFilteredReceptions] = useState<Reception[]>([]);
+export function ReceptionTable({ refreshTrigger }) {
+  const [receptions, setReceptions] = useState([]);
+  const [filteredReceptions, setFilteredReceptions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<keyof Reception>('created_at');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sortField, setSortField] = useState('created_at');
+  const [sortDirection, setSortDirection] = useState('desc');
   const [isLoading, setIsLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [showStatusFilter, setShowStatusFilter] = useState(false);
   
   const { language } = useTheme();
   const t = useTranslation();
   
-  const translate = (key: string) => {
+  const translate = (key) => {
     try {
-      return t(language, key);
+      return t(language, key) || key;
     } catch (error) {
-      console.warn(`Translation error for key: ${key}`, error);
+      console.warn('Translation error for key:', key, error);
       return key;
     }
   };
@@ -70,7 +66,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
     setFilteredReceptions(filtered);
   }, [searchTerm, receptions, statusFilter]);
 
-  const handleSort = (field: keyof Reception) => {
+  const handleSort = (field) => {
     const direction =
       sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
     setSortField(field);
@@ -92,19 +88,20 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
     setFilteredReceptions(sorted);
   };
 
-  const handleDelete = (id: string) => {
-    if (!confirm(translate('table.deleteConfirm'))) return;
+  const handleDelete = (id) => {
+    const confirmMessage = translate('table.deleteConfirm');
+    if (!confirm(confirmMessage)) return;
 
     try {
       storage.deleteReception(id);
       fetchReceptions();
     } catch (error) {
-      alert(translate('table.deleteError'));
+      const errorMessage = translate('table.deleteError');
+      alert(errorMessage);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    // Supprimé les variables inutilisées
+  const getStatusColor = (status) => {
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
@@ -113,7 +110,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
     return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status) => {
     const passedStatus = translate('status.passedThird');
     const expiredStatus = translate('status.expired');
     
@@ -128,7 +125,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
     return filteredReceptions.reduce((total, reception) => total + reception.total_units, 0);
   };
 
-  const getSortIcon = (field: keyof Reception) => {
+  const getSortIcon = (field) => {
     if (sortField !== field) return <ArrowUpDown className="h-4 w-4" />;
     return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
   };
@@ -168,17 +165,16 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
       ];
 
       const data = filteredReceptions.map(reception => [
-  reception.product_name ?? '',
-  reception.pallet_number ?? '',
-  reception.cartons?.toString() ?? '0',
-  reception.units_per_carton?.toString() ?? '0',
-  reception.total_units?.toLocaleString() ?? '0',
-  reception.barcode ?? '',
-  reception.production_date ? format(new Date(reception.production_date), 'dd/MM/yyyy') : '',
-  reception.expiration_date ? format(new Date(reception.expiration_date), 'dd/MM/yyyy') : '',
-  reception.status ?? ''
-]);
-  
+        reception.product_name || '',
+        reception.pallet_number || '',
+        reception.cartons?.toString() || '0',
+        reception.units_per_carton?.toString() || '0',
+        reception.total_units?.toLocaleString() || '0',
+        reception.barcode || '',
+        reception.production_date ? format(new Date(reception.production_date), 'dd/MM/yyyy') : '',
+        reception.expiration_date ? format(new Date(reception.expiration_date), 'dd/MM/yyyy') : '',
+        reception.status || ''
+      ]);
 
       // Utiliser autoTable directement
       autoTable(doc, {
@@ -213,7 +209,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
       });
 
       // Ajouter le total général
-      const finalY = (doc as any).lastAutoTable?.finalY + 10 || 100;
+      const finalY = doc.lastAutoTable?.finalY + 10 || 100;
       doc.setFontSize(12);
       doc.setTextColor(41, 128, 185);
       doc.setFont(undefined, 'bold');
@@ -397,12 +393,12 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                     <th
                       key={key}
                       className="cursor-pointer px-4 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors duration-150"
-                      onClick={() => handleSort(key as keyof Reception)}
+                      onClick={() => handleSort(key)}
                     >
                       <div className="flex items-center gap-2">
                         {icon}
                         {translate(`table.columns.${key}`)}
-                        {getSortIcon(key as keyof Reception)}
+                        {getSortIcon(key)}
                       </div>
                     </th>
                   ))}
@@ -428,7 +424,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                     <td className="px-4 py-4">
                       <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-mono border border-gray-300 dark:border-slate-600 rounded-full bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300">
                         <Palette className="h-3 w-3" />
-                        {reception.pallet_number ?? ""}
+                        {reception.pallet_number || ''}
                       </span>
                     </td>
                     <td className="px-4 py-4">
@@ -458,8 +454,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                     <td className="px-4 py-4 text-gray-900 dark:text-white">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4 text-gray-400" />
-                         {reception.production_date ? format(new Date(reception.production_date), 'dd/MM/yyyy') : '—'}
-
+                        {reception.production_date ? format(new Date(reception.production_date), 'dd/MM/yyyy') : '—'}
                       </div>
                     </td>
                     <td className="px-4 py-4">
@@ -470,8 +465,7 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
                       }`}>
                         <Calendar className="h-4 w-4" />
                         {reception.expiration_date ? format(new Date(reception.expiration_date), 'dd/MM/yyyy') : '—'}
-
-                       </div>
+                      </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-center flex items-center justify-center gap-1 text-gray-900 dark:text-white">
@@ -516,4 +510,4 @@ export function ReceptionTable({ refreshTrigger }: ReceptionTableProps) {
       </div>
     </div>
   );
-} 
+}
