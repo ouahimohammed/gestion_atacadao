@@ -92,8 +92,8 @@ export function ReceptionForm({ onReceptionAdded }: ReceptionFormProps) {
     try {
       const receptionData = {
         product_name: productName,
-        pallet_number: palletNumber || null,
-        cartons: parseInt(cartons),
+pallet_number: palletNumber || null,
+          cartons: parseInt(cartons),
         units_per_carton: parseInt(unitsPerCarton),
         total_units: totalUnits,
         barcode,
